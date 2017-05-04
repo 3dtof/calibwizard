@@ -6,6 +6,10 @@ Calibration Wizard For 3DTOF Cameras
 
 Following are the contents of each directory:
 
+Documentation
+-------------------
+The documentation can be found at: `CalibDoc <https://3dtof.github.io/calibwizard-doc/>`_
+
 calibration
 -------------------
 All the calibration scripts for various types of calibrations. These include Lens Calibration, Phase Offsets Calibration, Non Linearity Calibration and Temperature Calibration. 
