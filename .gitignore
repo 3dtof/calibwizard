@@ -1,0 +1,6 @@
+doc/_*
+doc/sphinxext/*
+doc/images/
+*.pyc
+*.csv
+*.conf
