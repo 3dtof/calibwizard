@@ -41,11 +41,15 @@ import csv
 import os
 import argparse
 
-def TemperatureCalibration(csvFile):
+def TemperatureCalibration(csvFile, chipset = "TintinCDKCamera"):
     """Calculates temperature calibration offsets (coeff_illum, coeff_sensor), taking csv file as input. 
     
     Takes a CSV file containing phase values at temperatures for illumination and sensor. Gives coeff_illum and coeff_sensor as output
     Uses a least squares fit to compute temperature calibration
+    Uses a least squares fit to compute temperature calibration. Also takes the chipset (tintin, calculus, etc)
+    CSV file should contain illumiantion temperature in the first column, sensor in the second and phase values in the third 
+    
+    Also takes in the chipset. This can be TintinCDKCamera or CalculusCDKCamera
     """
     if not os.path.exists(csvFile):
         print ("Invalid Filename")
@@ -71,13 +75,34 @@ def TemperatureCalibration(csvFile):
     phaseCorr1 -= phaseCorr1Calib
     A = np.c_[tSensor,tIllum]
     coeff_sensor,coeff_illum = np.linalg.lstsq(A, phaseCorr1)[0]
-    calibPrec = 1
-    coeff_illum *= 16
-    coeff_sensor *= 16
-    if coeff_illum > 2047 or coeff_illum < -2048 or coeff_sensor > 2047 or coeff_sensor < -2048:
-        calibPrec = 0
-        coeff_sensor /= 16
-        coeff_illum /= 16
+        
+    if chipset == 'TintinCDKCamera':
+		calibPrec = 1
+		coeff_illum *= 16
+		coeff_sensor *= 16
+		if coeff_illum > 2047 or coeff_illum < -2048 or coeff_sensor > 2047 or coeff_sensor < -2048:
+			calibPrec = 0
+			coeff_sensor /= 16
+			coeff_illum /= 16
+			calibPrec = 1
+			coeff_illum *= 16
+			coeff_sensor *= 16
+			if coeff_illum > 2047 or coeff_illum < -2048 or coeff_sensor > 2047 or coeff_sensor < -2048:
+				calibPrec = 0
+				coeff_sensor /= 16
+				coeff_illum /= 16
+        
+    if chipset == 'CalculusCDKCamera':
+        calibPrec = 8
+        coeff_illum *= -16
+        coeff_sensor *= -16
+        calibPrecDummy = calibPrec
+        while (calibPrecDummy < 12):
+            if coeff_illum > 2047 or coeff_illum < -2048 or coeff_sensor > 2047 or coeff_sensor < -2048:
+                coeff_illum /= 2
+                coeff_sensor /=2
+                calibPrec += 1
+            calibPrecDummy += 1
             
     return True, round(coeff_illum), round(coeff_sensor), calibPrec 
 
@@ -85,6 +110,7 @@ def parseArgs (args = None):
     
     parser = argparse.ArgumentParser(description='Calculate Temperature Calibration Offsets')
     parser.add_argument('-f', '--file', help = 'FilePath', required = 'True', default= None)
+    parser.add_argument('-c', '--chipset', help = 'Chipset Type', required = 'True', default = None)
     return parser.parse_args(args)
     
 
@@ -92,8 +118,9 @@ if __name__ == '__main__':
     val = parseArgs(sys.argv[1:])
     try:
         ret = TemperatureCalibration(val.file)
+        ret = TemperatureCalibration(val.file, val.chipset)
         boo, coeff_illum, coeff_sensor, calibPrec = ret
-        print ("coeff_illum = %d\ncoeff_senosr = %d\ncalib_prec = %d\n"%(coeff_illum, coeff_sensor, calibPrec))
+        print ("coeff_illum = %d\ncoeff_sensor = %d\ncalib_prec = %d\n"%(coeff_illum, coeff_sensor, calibPrec))
     except Exception, e:
         print e
         sys.exit()

@@ -298,17 +298,30 @@ class CalibrationTemperaturePage(CalibrationPage):
 #         '\ncoeff_illum_2 = %d, coeff_sensor_2 = %d,\n')%\
 #           (int(round(t1[1], 0)), int(round(t1[0], 0)), int(round(t2[1], 0)), int(round(t2[0], 0))))
 #     else:
-    t1 *= 16 # for calib_prec = 1
-    calibPrec = 1
-    if np.any(t1 >= 2048) or np.any(t1 < -2048):
-      t1 /= 16
-      calibPrec = 0
+    if self.calibrationWizard.camera == 'TintinCDKCamera':
+        t1 *= 16 # for calib_prec = 1
+        calibPrec = 1
+        if np.any(t1 >= 2048) or np.any(t1 < -2048):
+          t1 /= 16
+          calibPrec = 0
+        
+          
+    if self.calibrationWizard.camera == 'CalculusCDKCamera':
+        calibPrec = 8
+        t1 *= -16
+        calibPrecDummy = calibPrec
+        while (calibPrecDummy < 12):
+            if np.any(t1 >= 2048) or np.any(t1 < -2048):
+                t1 /= 2
+                calibPrec += 1
+            calibPrecDummy += 1
+    
     
     self.calibrationWizard.calibParams['coeff_illum'] = int(round(t1[1], 0))
     self.calibrationWizard.calibParams['coeff_sensor'] = int(round(t1[0], 0))
     self.calibrationWizard.calibParams['calib_prec'] = calibPrec
     
-    self.paramsText.setText(('coeff_illum_1 = %d, coeff_sensor_1 = %d,\n' +
+    self.paramsText.setText(('coeff_illum = %d, coeff_sensor = %d,\n' +
                             'calib_prec = %d')%\
         (int(round(t1[1], 0)), int(round(t1[0], 0)), calibPrec))
 
