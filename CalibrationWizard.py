@@ -41,7 +41,7 @@ import sys
 import os
 import Voxel
 from wizard.CalibrationInitPage import CalibrationInitPage
-from wizard.CalibrationSelectPage import CalibrationSelectPage
+from wizard.CalibrationSelectPageStrategy import CalibrationSelectPage
 from wizard.CalibrationLensPage import CalibrationLensPage
 from wizard.CalibrationConclusionsPage import CalibrationConclusionPage
 from wizard.CalibrationTemperaturePage import CalibrationTemperaturePage

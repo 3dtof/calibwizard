@@ -70,4 +70,11 @@ CALIB_NAME['commonPhase'] = 'Common Phase'
 CALIB_NAME['perPixel']= 'Per Pixel'
 CALIB_NAME['nonLinearity'] = 'Non Linearity'
 CALIB_NAME['temperature'] = 'Temperature'
-CALIB_NAME['hdrCommonPhase'] = 'HDR Common Phase'    
+CALIB_NAME['hdrCommonPhase'] = 'HDR Common Phase'  
+
+DATA = {}
+DATA['FlatWall'] = "VXL file of a camera pointing to a flat wall"
+DATA['CheckerBoard'] = "VXL or PNG file of images from the camera pointing to a checkerboard"
+DATA['Temperature'] = "CSV file with tillum, tsensor and phase as rows"
+DATA["PieceWise"] = "CSV file with distance and phase as two rows"  
+DATA["FlatWall HDR"] = "VXL file of a camera pointing to a flat wall with HDR on"
