@@ -142,7 +142,7 @@ def extractRawdataFromVXL(filename, camsys):
     r.close()
     return rawFrames, rows, cols
 
-def commonPhaseOffset(file1, distance, modFreq1, cx, cy, file2 = None, modFreq2 = None, window = 4, chipset = 'ti.tinitn'):
+def commonPhaseOffset(file1, distance, modFreq1, cx, cy, file2 = None, modFreq2 = None, window = 4, chipset = 'TintinCDKCamera'):
     """ Computes the common phase offsets. 
     
     This function calculates the common phase offsets for a given file, taking VXL as input. 
@@ -175,7 +175,7 @@ def commonPhaseOffset(file1, distance, modFreq1, cx, cy, file2 = None, modFreq2 
         phaseCorr2 = wrapPhaseToSignedInteger(int(phaseAverage2-phaseActual2))
     else:
         phaseCorr2 = 0    
-    if chipset == 'ti.calculus': #additive phase
+    if chipset == 'CalculusCDKCamera': #additive phase
         phaseCorr = -phaseCorr
         phaseCorr2 = -phaseCorr2
     return True, phaseCorr, phaseCorr2, rows, cols
