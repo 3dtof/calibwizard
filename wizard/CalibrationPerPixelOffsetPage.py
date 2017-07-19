@@ -62,6 +62,18 @@ class CalibrationPerPixelOffsetPage(CalibrationPage):
         self.button.clicked.connect(self.selectFileDialog)
         self.calibrateButton = QtGui.QPushButton('Calibrate')
         self.calibrateButton.setDisabled(True)
+        label = QtGui.QLabel("Dealiased Phase Mask")
+        self.dealiasedPhaseMaskSpinBox = QtGui.QSpinBox()
+        self.dealiasedPhaseMaskSpinBox.setRange(-10, 10)
+        self.dealiasedPhaseMaskSpinBox.setValue(0)
+        self.dealiasedPhaseMask = 0
+        self.dealiasedPhaseMaskSpinBox.valueChanged.connect(self.setDealiasedPhaseMask)
+        hlayout = QtGui.QHBoxLayout()
+        hlayout.addWidget(label)
+        hlayout.addStretch()
+        hlayout.addWidget(self.dealiasedPhaseMaskSpinBox)
+        hlayout.addStretch()
+        self.layout.addLayout(hlayout)
         hlayout = QtGui.QHBoxLayout()
         hlayout.addStretch()
         hlayout.addWidget(self.calibrateButton)
@@ -96,7 +108,7 @@ class CalibrationPerPixelOffsetPage(CalibrationPage):
     def calibrate(self):
         self.calibrateButton.setDisabled(True)
         self.label.setText("Calibrating ...")
-        boo, text, rows, cols = perPixelOffset(self.fileName, None, self.calibrationWizard.profileName)
+        boo, text, rows, cols = perPixelOffset(self.fileName,dealiasedPhaseMask = self.dealiasedPhaseMask, pathToSave = None, profileName = self.calibrationWizard.profileName)
         
         if boo:
             self.calibrated = True
@@ -107,3 +119,6 @@ class CalibrationPerPixelOffsetPage(CalibrationPage):
         else:
             self.label.setText("Could not complete calibration. Try with a different file") 
             self.calibrateButton.setEnabled(True)   
+
+    def setDealiasedPhaseMask(self, value):
+        self.dealiasedPhaseMask = value

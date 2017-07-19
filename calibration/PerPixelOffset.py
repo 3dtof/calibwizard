@@ -117,7 +117,7 @@ def wrapPhaseToSignedInteger(phase):
     else:
         return phase
 
-def perPixelOffset(fileName, pathToSave= None, profileName = None):
+def perPixelOffset(fileName, dealiasedPhaseMask = 0, pathToSave= None, profileName = None):
     """Computes pixelwise phase offset for all pixels. Returns a numpy file containing the pixelwise offsets as well as the bin file
     
     .. note: Copy the bin file to the /path/to/.voxel/conf folder path before using it in the conf file
@@ -160,7 +160,7 @@ def perPixelOffset(fileName, pathToSave= None, profileName = None):
     with open (phaseOffsetFileName, 'wb') as f:
         f.write(struct.pack('H', rows))
         f.write(struct.pack('H', cols))
-        f.write(struct.pack('H', 0))
+        f.write(struct.pack('H', dealiasedPhaseMask))
         np.reshape(deltaPhase, rows*cols).astype(np.short).tofile(f)    
     return True, phaseOffsetFileName, rows, cols
 
@@ -168,16 +168,12 @@ def parseArgs (args = None):
     parser = argparse.ArgumentParser(description='Calculate Per Pixel Offsets')
     parser.add_argument('-f', '--file', help = 'Filename', required = 'True', default= None)
     parser.add_argument('-n', '--name', help = 'Profile Name', default = None, required = False)
+    parser.add_argument('-m', '--mask', help = 'Dealiased Phase Mask', required = True, type = int)
     return parser.parse_args(args)    
 
 if __name__ == '__main__':
     val = parseArgs(sys.argv[1:])
-    ret = perPixelOffset(val.file, profileName=val.name)
-    if not ret:
-        print "Can't compute the phase offsets"
-        sys.exit()
-    boo, text, rows, cols = ret
-    print ("Successfully saved the offsets to " + text)
+    ret = perPixelOffset(val.file, dealiasedPhaseMask = val.mask,  profileName=val.name)
     if not ret:
         print "Can't compute the phase offsets"
         sys.exit()

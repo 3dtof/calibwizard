@@ -226,6 +226,7 @@ class CalibrationDataCapturePage(CalibrationPage):
         self.currentFrameCount = 0
         
     def captureDataAndCalibrate(self):
+        r, self.dealiasedPhaseMask = self.depthCamera.geti("dealiased_ph_mask")
         r, dealiasEnabled = self.depthCamera.getb("dealias_en")
         if not r:
             QtGui.QMessageBox.critical(self, "Can't get parameter", "Cannot get the dealias_en parameter")
@@ -386,7 +387,7 @@ class CalibrationDataCapturePage(CalibrationPage):
             try:
                 c = Voxel.Configuration()
                 r, path = c.getLocalConfPath()
-                ret, phaseOffsetFileName, _, _ = perPixelOffset(self.perPixelFileName, pathToSave=path, profileName = self.calibrationWizard.profileName)
+                ret, phaseOffsetFileName, _, _ = perPixelOffset(self.perPixelFileName, pathToSave=path, profileName = self.calibrationWizard.profileName, dealiasedPhaseMask = self.dealiasedPhaseMask)
             except Exception, e:
                 ret = False
                 print e
