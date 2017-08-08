@@ -196,6 +196,7 @@ For high-precision applications, pixel-to-pixel calibration is recommended.  Thi
 Data Required
 ######################
 - VXL file of the camera pointing to a flat wall. 
+- Value of dealiased phase mask while recording. 
 
 .. note::
 	- Ensure that the lens (**required**) and non linearity calibration (if needed) is done before the pixelwise phase offset calibration
