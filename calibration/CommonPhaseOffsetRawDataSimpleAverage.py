@@ -138,7 +138,7 @@ def extractRawdataFromVXL(filename, camsys):
             print("Failed to read frame %d" %i)
             break
         rawFrame = Voxel.RawDataFrame.typeCast(r.frames[Voxel.DepthCamera.FRAME_RAW_FRAME_UNPROCESSED])
-        rawFrames[i] = np.array(rawFrame.data, copy=True)[:-255]
+        rawFrames[i] = np.array(rawFrame.data, copy=True)
     r.close()
     return rawFrames, rows, cols
 
@@ -184,9 +184,9 @@ def parseArgs (args = None):
     parser = argparse.ArgumentParser(description='Calculate Common Phase Offsets')
     parser.add_argument('-f', '--file1', help = 'Filename1', required = 'True', default= None)
     parser.add_argument('-d', '--distance', type = float, help = 'Distance in meters', required = 'True', default= 0.5)
-    parser.add_argument('-m', '--modFreq1', help = 'Modulation Frequency 1', type = float,  required = 'True', default = 40)     
+    parser.add_argument('-m', '--modFreq1', help = 'Modulation Frequency 1', type = float,  required = 'True', default = 40.0)     
     parser.add_argument('-g', '--file2', help = 'Filename2', default= None)
-    parser.add_argument('-n', '--modFreq2', help = 'Modulation Frequency 2', type = float, default = 0)
+    parser.add_argument('-n', '--modFreq2', help = 'Modulation Frequency 2', type = float, default = 0.0)
     parser.add_argument('-x', '--cx', help = 'cx', type = float, default = 0)
     parser.add_argument('-y', '--cy', help = 'cy', type = float, default = 0)
     parser.add_argument('-w', '--window', help = 'Window Size', type = int, default = 4)
