@@ -40,7 +40,7 @@ import csv
 import os
 import sys
 import numpy as np
-from scipy import curve_fit
+from scipy.optimize import curve_fit
 import argparse
 
 def NonLinearityCalibration(filename, modFreq, modFreq2 = 0, phaseCorr = 0, phaseCorr2 = 0, chipset = 'TintinCDKCamera', period = 90):
