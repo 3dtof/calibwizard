@@ -2,9 +2,9 @@
 This file calculates the phase offsets and saves it as an npy file.
 It also returns the bin file of the offsets. 
 Usage:
-python PerPixelOffset.py -f "file.vxl" -n "profileName"
+python PerPixelOffset.py -f "file.vxl" -n "profileName" -m 0
 or 
-python PerPixelOffset.py --file "file.vxl" --name "profileName"
+python PerPixelOffset.py --file "file.vxl" --name "profileName" --mask 0
 
 '''
 
