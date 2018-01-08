@@ -138,8 +138,7 @@ def extractRawdataFromVXL(filename, camsys):
             print("Failed to read frame %d" %i)
             break
         rawFrame = Voxel.RawDataFrame.typeCast(r.frames[Voxel.DepthCamera.FRAME_RAW_FRAME_UNPROCESSED])
-        rawFrames[i] = np.array(rawFrame.data, copy=True)
-    r.close()
+        rawFrames[i] = np.array(rawFrame.data, copy=True)[:-255]
     return rawFrames, rows, cols
 
 def commonPhaseOffset(file1, distance, modFreq1, cx, cy, file2 = None, modFreq2 = None, window = 4, chipset = 'TintinCDKCamera'):
