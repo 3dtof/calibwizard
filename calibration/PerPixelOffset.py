@@ -102,7 +102,7 @@ def computeAveragePhases(camsys, filename, window = 0):
     
     r.close()
     dist = np.array([k1, k2, k3, p1, p2])
-    mtx  = np.array([[fx, 0 , cx], [0, fy, cy], [0, 0 ,1]])
+    mtx  = np.array([[fy, 0 , cy], [0, fx, cx], [0, 0 ,1]])
     return averagePhase, rows, cols, mtx, dist
 
 MAX_PHASE_VALUE = 4096
@@ -136,6 +136,7 @@ def perPixelOffset(fileName, dealiasedPhaseMask = 0, pathToSave= None, profileNa
     else:
         newFile = pathToSave + profileName + PHASE_FILENAME
     np.save(newFile, phases.T)
+    phases2 = phases.T
     cGrid = np.mgrid[0:rows,0:cols].astype(np.float32)
     cGrid1D = np.reshape(np.transpose(cGrid, (1, 2, 0)), (rows*cols, 1, 2)).astype(np.float32)
     cGridCorrected1D = cv2.undistortPoints(cGrid1D, mtx, dist)
@@ -151,6 +152,7 @@ def perPixelOffset(fileName, dealiasedPhaseMask = 0, pathToSave= None, profileNa
     rad2DSquare = ((rx**2) + (ry**2))
 
     cosA = 1/((rad2DSquare + 1)**0.5)
+    print cosA.shape
     
     deltaPhase = phases - phases[int(mtx[0,2]), int(mtx[1,2])]/cosA
     if pathToSave is None:
@@ -160,7 +162,7 @@ def perPixelOffset(fileName, dealiasedPhaseMask = 0, pathToSave= None, profileNa
     with open (phaseOffsetFileName, 'wb') as f:
         f.write(struct.pack('H', rows))
         f.write(struct.pack('H', cols))
-        f.write(struct.pack('H', dealiasedPhaseMask))
+        f.write(struct.pack('H', np.uint16(dealiasedPhaseMask) & 0x000f))
         np.reshape(deltaPhase, rows*cols).astype(np.short).tofile(f)    
     return True, phaseOffsetFileName, rows, cols
 
