@@ -101,7 +101,7 @@ def computeAveragePhases(camsys, filename, window = 0):
     averagePhase = np.angle(averagePhase)* 4096/(2*np.pi)
     
     r.close()
-    dist = np.array([k1, k2, k3, p1, p2])
+    dist = np.array([k1, k2, p1, p2, k3])
     mtx  = np.array([[fy, 0 , cy], [0, fx, cx], [0, 0 ,1]])
     return averagePhase, rows, cols, mtx, dist
 
@@ -152,7 +152,6 @@ def perPixelOffset(fileName, dealiasedPhaseMask = 0, pathToSave= None, profileNa
     rad2DSquare = ((rx**2) + (ry**2))
 
     cosA = 1/((rad2DSquare + 1)**0.5)
-    print cosA.shape
     
     deltaPhase = phases - phases[int(mtx[0,2]), int(mtx[1,2])]/cosA
     if pathToSave is None:
