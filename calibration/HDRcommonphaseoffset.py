@@ -52,7 +52,7 @@ import Voxel
 from numpy import dtype
 import argparse
 
-def computeHDRAveragePhases(camsys, filename, cx = 0, cy = 0, window = 4, chipset = 'tintin.ti'):
+def computeHDRAveragePhases(camsys, filename, cx = 0, cy = 0, window = 4, chipset = 'TintinCDKCamera'):
     """ Computes average phases for the HDR frame"""
     r = Voxel.FrameStreamReader(filename, camsys)
     _, cols = r.getStreamParamu("frameWidth")
@@ -77,14 +77,14 @@ def computeHDRAveragePhases(camsys, filename, cx = 0, cy = 0, window = 4, chipse
         print("Stream is not good: " + filename)
         
     numFrames = r.size()
-    if chipset == 'tintin.ti':
+    if chipset == 'TintinCDKCamera':
         for i in np.arange(numFrames):
             if not r.readNext():
                 print("Failed to read frame %d" %i)
                 break
             tofFrame = Voxel.ToF1608Frame.typeCast(r.frames[Voxel.DepthCamera.FRAME_RAW_FRAME_PROCESSED])
             flag = np.array(tofFrame._flags, copy=True)[0]
-            if flag == 0x04:
+            if flag & 0x04 == 0x04:
                 phase = np.array(tofFrame._phase, copy=True).reshape((rows, cols))\
                 [centerShape[0]:centerShape[1], centerShape[2]:centerShape[3]]*2*np.pi/4096
                 averagePhase += np.array(tofFrame._amplitude, copy = True).reshape((rows,cols))\
@@ -97,7 +97,7 @@ def computeHDRAveragePhases(camsys, filename, cx = 0, cy = 0, window = 4, chipse
             averagePhase = np.sum(averagePhase)/(window*window)
         averagePhase = np.angle(averagePhase)* 4096/(2*np.pi)
         r.close()
-    if chipset == 'calculus.ti':
+    if chipset == 'CalculusCDKCamera':
         tofFrame = Voxel.ToF1608Frame.typeCast(r.frames[Voxel.DepthCamera.FRAME_RAW_FRAME_PROCESSED])
         flagFirst = np.array(tofFrame._flags, copy = True)[0]
         amplitudeFirst = np.array(tofFrame._amplitude, copy = True)
@@ -130,7 +130,7 @@ def computeHDRAveragePhases(camsys, filename, cx = 0, cy = 0, window = 4, chipse
             averagePhase = np.sum(averagePhase)/(window*window)
         averagePhase = np.angle(averagePhase)* 4096/(2*np.pi)
         r.close()
-        return True, averagePhase, rows, cols
+    return True, averagePhase, rows, cols
     
 MAX_PHASE_VALUE = 4096
 def wrapPhaseToSignedInteger(phase):
@@ -142,19 +142,20 @@ def wrapPhaseToSignedInteger(phase):
     else:
         return phase
  
-def hdrCommonPhaseOffset(fileName1 , distance, modFreq1, cx = 0, cy = 0,  fileName2 = None, modFreq2 = None, window = 4, chipset = 'tintin.ti'):
+def hdrCommonPhaseOffset(fileName1 , distance, modFreq1, cx = 0, cy = 0,  fileName2 = None, modFreq2 = None, window = 4, chipset = 'TintinCDKCamera'):
     """ Calculates HDR phase offsets for ti chipsets. 
     
     .. note: Make sure that the hdr flag is on for the file before capturing the file"""
     c = 299792458. # m/s
     camsys = Voxel.CameraSystem()
-    ret1, averagePhase1, rows, cols = computeHDRAveragePhases(camsys, fileName1, cx, cy, window, chipset)
+    ret1 = computeHDRAveragePhases(camsys, fileName1, cx, cy, window, chipset)
     if not ret1:
         return False
+    ret1, averagePhase1, rows, cols = ret1
     ds1 = c/(2*modFreq1*1E6)
     phaseActual1 = distance/ds1*4096
     hdrphaseCorr = wrapPhaseToSignedInteger(int(averagePhase1- phaseActual1))
-    if chipset == 'tintin.ti':
+    if chipset == 'TintinCDKCamera':
         if fileName2 and modFreq2:
             ret2, averagePhase2, _, _ =  computeHDRAveragePhases(camsys, fileName2, cx, cy, window)
             if not ret2:
@@ -164,7 +165,7 @@ def hdrCommonPhaseOffset(fileName1 , distance, modFreq1, cx = 0, cy = 0,  fileNa
             hdrphaseCorr2 = wrapPhaseToSignedInteger(int(averagePhase2- phaseActual2))
         else:
             hdrphaseCorr2 = 0 
-    elif chipset == 'calculus.ti':
+    elif chipset == 'CalculusCDKCamera':
         hdrphaseCorr = -hdrphaseCorr 
         hdrphaseCorr2 = 0   
     return True, hdrphaseCorr, hdrphaseCorr2
@@ -180,7 +181,7 @@ def parseArgs(args = None):
     parser.add_argument('-x', '--cx', help = 'cx', type = float, default = 0)
     parser.add_argument('-y', '--cy', help = 'cy', type = float, default = 0)
     parser.add_argument('-w', '--window', help = 'Widow Size', type = int, default = 4)
-    parser.add_argument('-c', '--chipset', help = 'Chipset', default = 'tintin.ti', required = 'True')
+    parser.add_argument('-c', '--chipset', help = 'Chipset', default = 'TintinCDKCamera', required = 'True')
     return parser.parse_args(args)
 
 if __name__ == "__main__":
@@ -192,9 +193,9 @@ if __name__ == "__main__":
         print "Can't find HDR phase offsets"
     else:
         boo, hdrPhaseCorr1, hdrPhaseCorr2 = ret
-    if val.chipset == 'tintin.ti':
-        print 'hdr_phase_corr_1 = %d\n'%(hdrPhaseCorr1)
-        print 'hdr_phase_corr_2 = %f\n'%(hdrPhaseCorr2)
-    else:
-        print "mod_freq_2 = %d\n"%hdrPhaseCorr1  
+        if val.chipset == 'TintinCDKCamera':
+            print 'hdr_phase_corr_1 = %d\n'%(hdrPhaseCorr1)
+            print 'hdr_phase_corr_2 = %d\n'%(hdrPhaseCorr2)
+        else:
+            print "mod_freq_2 = %d\n"%hdrPhaseCorr1  
     
