@@ -43,7 +43,7 @@ import numpy as np
 from scipy.optimize import curve_fit
 import argparse
 
-def NonLinearityCalibration(filename, modFreq, modFreq2 = 0, phaseCorr = 0, phaseCorr2 = 0, chipset = 'TintinCDKCamera', period = 90):
+def NonLinearityCalibration(filename, modFreq, modFreq2 = 0, phaseCorr = 0, phaseCorr2 = 0, chipset = 'TintinCDKCamera', period = 0):
     """This function computes non linearity coefficients. 
     
     **Parameters**::
@@ -99,16 +99,17 @@ def NonLinearityCalibration(filename, modFreq, modFreq2 = 0, phaseCorr = 0, phas
 def getCoefficients(measuredPhase, distancesToPhase, phaseCorr, period):
     if not phaseCorr:
         phaseCorr1 = -distancesToPhase[np.size(measuredPhase)/2] + measuredPhase[np.size(measuredPhase)/2]
-        print phaseCorr1
     else:
         phaseCorr1 = 0              
     expectedPhase = distancesToPhase + phaseCorr + phaseCorr1
     expectedPhase = expectedPhase%4096    
     measuredPhase = (measuredPhase + phaseCorr)%4096
+    # expectedPhase = np.append(expectedPhase, 0)
+    # measuredPhase = np.append(measuredPhase, 0)
     indices = measuredPhase.argsort()
     measuredPhase = measuredPhase[indices]
     expectedPhase = expectedPhase[indices]
-    offsetPoints = np.arange(0., 4096./2**(2-period), 256./2**(2-period))        
+    offsetPoints = np.arange(0., 4096./2**(2-period)+1, 256./2**(2-period))  
     y = np.around(np.interp(offsetPoints, measuredPhase, expectedPhase))
     indexes = []
     for val in np.arange(len(y)-1):
@@ -124,17 +125,18 @@ def getCoefficients(measuredPhase, distancesToPhase, phaseCorr, period):
 def parseArgs (args = None):
     
     parser = argparse.ArgumentParser(description='Calculate Common Phase Offsets')
-    parser.add_argument('-f', '--file', help = 'CSV file', required = 'True', default= None)
-    parser.add_argument('-m', '--modFreq', type = float, help = 'Modulation Frequency', required = 'True', default= 10)
-    parser.add_argument('-n', '--modFreq2', type = float, help = 'Modulation Frequency 2', required = 'False', default = 0)
-    parser.add_argument('-p', '--phaseCorr', help = 'Phase Corr Value', type = int,  required = 'True', default = 0)     
-    parser.add_argument('-q', '--phaseCorr2', help = 'Phase Corr 2 Value', type = int, required = 'False', default = 0)
-    parser.add_argument('-c', '--chipset', help = 'Camera Type', required = 'False', default = 'TintinCDKCamera')
+    parser.add_argument('-f', '--file', help = 'CSV file', required = True, default= None)
+    parser.add_argument('-m', '--modFreq', type = float, help = 'Modulation Frequency', required = True, default= 10)
+    parser.add_argument('-n', '--modFreq2', type = float, help = 'Modulation Frequency 2', required = False, default = 0)
+    parser.add_argument('-p', '--phaseCorr', help = 'Phase Corr Value', type = int,  required = True, default = 0)     
+    parser.add_argument('-q', '--phaseCorr2', help = 'Phase Corr 2 Value', type = int, required = False, default = 0)
+    parser.add_argument('-c', '--chipset', help = 'Camera Type', required = False, default = 'TintinCDKCamera')
+    parser.add_argument('-e', '--period', help = 'Phase Linearity Period (0, 1 or 2)', required = False, default = 0, type = int)
     return parser.parse_args(args)           
 
 if __name__ == '__main__':
     val = parseArgs(sys.argv[1:])
-    ret = NonLinearityCalibration(file = val.file, phaseCorr = val.phaseCorr, modFreq = val.modFreq, modFreq2 = val.modFreq2, phaseCorr2 = val.phaseCorr2, chipset = val.chipset)
+    ret = NonLinearityCalibration(filename= val.file, phaseCorr = val.phaseCorr, modFreq = val.modFreq, modFreq2 = val.modFreq2, phaseCorr2 = val.phaseCorr2, chipset = val.chipset, period = val.period)
     if not ret:
         print"Can't get the nonlinearity coefficients"
         sys.exit()
@@ -150,3 +152,4 @@ if __name__ == '__main__':
         for c in y1:
             data1 = str(c) + ' '
         print "phase_lin_coeff1 = " + data
+    print "phase_lin_corr_period = {}".format(val.period)

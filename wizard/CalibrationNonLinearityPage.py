@@ -266,7 +266,7 @@ class CalibrationNonLinearityPage (CalibrationPage):
         csvFile = self.calibrationWizard.profilePath + "/%s %s"%(self.calibrationWizard.profileName, CalibrationNonLinearityPage.CSV_FILE_NAME)
         self.writeCSV(d1, csvFile)
         try:
-            ret = NonLinearityCalibration(csvFile, self.modFrequency, self.modFrequency2)
+            ret = NonLinearityCalibration(csvFile, self.modFrequency, self.modFrequency2, period = self.phasePeriod.currentIndex())
             boo, y,y2 = ret
         except Exception, e:
             ret = False
