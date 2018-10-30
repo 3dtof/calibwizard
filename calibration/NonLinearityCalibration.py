@@ -72,19 +72,20 @@ def NonLinearityCalibration(filename, modFreq, modFreq2 = 0, phaseCorr = 0, phas
             phases.append(float((row[1])))
             if len(row) > 2:
                 phases2.append(float(row[2]))
+
     if not distances or not phases:
         print("Data missing")
         return
     distances = np.array(distances)
     phases = np.array(phases)
-    distancesToPhase = distances*modFreq*4096*2e6/(100*c)
+    distancesToPhase = distances*modFreq*4096*2e6/(c)
     distancesToPhase = distancesToPhase[distances.argsort()]
     measuredPhase = phases[distances.argsort()]
     if chipset == 'TintinCDKCamera':
         y = getCoefficients(measuredPhase, distancesToPhase, phaseCorr, period)
         if phases2:
             phases2 = np.array(phases2)
-            distancesToPhase2 = distances*modFreq2*4096*2e6/(100*c)
+            distancesToPhase2 = distances*modFreq2*4096*2e6/c
             distancesToPhase2 = distancesToPhase2[distances.argsort()]
             measuredPhase2 = phases2[distances.argsort()]
             y1 = getCoefficients(measuredPhase2, distancesToPhase2, phaseCorr2, period)
@@ -104,12 +105,11 @@ def getCoefficients(measuredPhase, distancesToPhase, phaseCorr, period):
     expectedPhase = distancesToPhase + phaseCorr + phaseCorr1
     expectedPhase = expectedPhase%4096    
     measuredPhase = (measuredPhase + phaseCorr)%4096
-    # expectedPhase = np.append(expectedPhase, 0)
-    # measuredPhase = np.append(measuredPhase, 0)
     indices = measuredPhase.argsort()
     measuredPhase = measuredPhase[indices]
     expectedPhase = expectedPhase[indices]
-    offsetPoints = np.arange(0., 4096./2**(2-period)+1, 256./2**(2-period))  
+    expectedPhase = checkBoundaryConditions(measuredPhase, expectedPhase, period)
+    offsetPoints = np.arange(0., 4096./2**(2-period), 256./2**(2-period))
     y = np.around(np.interp(offsetPoints, measuredPhase, expectedPhase))
     indexes = []
     for val in np.arange(len(y)-1):
@@ -121,6 +121,26 @@ def getCoefficients(measuredPhase, distancesToPhase, phaseCorr, period):
             y[val+1:] = offsetPoints[val+1:]
             y = y.astype(int)          
     return y
+
+def checkBoundaryConditions(measuredPhase, expectedPhase, period):
+    '''
+    Function to check boundary conditions after sorting expected phases and measured phases based on the measured phase. 
+    Two boundary conditions are possible: measured phase has wrapped around, while expected phase has not. This will happen 
+    in the beginning. Or expected phase has wrapped around, while measured phase has not. 
+    This will happen at the end of the array.
+    '''
+
+    #FIXME: Assuming that the wraparound happens only for the first and the last elements 
+    # of the array. This seems okay, considering the fact that common phase 
+    # offsets are subtracted from both the expected phases as well as the measured phases
+
+    if np.abs(measuredPhase[0] - expectedPhase[0]) > 3000: #difference in phase is 3000 - very conservative
+        expectedPhase[0] = expectedPhase[0] - 4096/2**(2-period)
+
+    if np.abs(measuredPhase[-1] - expectedPhase[-1]) > 3000:
+        expectedPhase[-1] = expectedPhase[-1] + 4096/2**(2-period)
+
+    return expectedPhase
             
 def parseArgs (args = None):
     
@@ -145,11 +165,15 @@ if __name__ == '__main__':
         data = ''
         data1 = ''
         for c in y:
+            if c < 0:
+                c += 4096 # Negative values cannot be programmed. So, they should be wrapped around. 
             data += str(c) + ' '
     
     print "phase_lin_coeff0 = " + data
-    if y1:
-        for c in y1:
-            data1 = str(c) + ' '
-        print "phase_lin_coeff1 = " + data
+    if y1 is not None:
+        for c1 in y1:
+            if c1 < 0:
+                c1 += 4096
+            data1 += str(c1) + ' '
+        print "phase_lin_coeff1 = " + data1
     print "phase_lin_corr_period = {}".format(val.period)
